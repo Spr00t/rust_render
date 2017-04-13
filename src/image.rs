@@ -105,7 +105,6 @@ impl Image {
         if (x0 as i32 - x1 as i32).abs() < (y0  as i32 - y1  as i32 ).abs() {
             swap(&mut x0, &mut y0);
             swap(&mut x1, &mut y1);
-            swap(&mut z1, &mut z1);
             steep = true;
         }
         if x0 >x1 { // make it left-to-right

@@ -10,6 +10,7 @@ mod scene;
 mod array2d;
 
 use geometry::*;
+use geometry3::*;
 use image::*;
 use bridge::Application;
 use render::*;
@@ -168,21 +169,24 @@ fn main() {
     //image.draw_line( (0, 6), (w as i32, 10), ColorE::Green);
     let mut counter = 0;
 
-    let triangle = Triangle::from((600, 400), (600, 200), (200, 50));
-    image.draw_triangle(triangle, ColorE::Green, ColorE::Green);
+    let mut scn = scene::Scene::new(w, h);
+    {
+        let zbuffer = &mut scn.get_zbuffer();
+        let triangle = Triangle3::from((600, 400, 0), (600, 200, 0), (200, 50, 0));
+        image.draw_triangle(triangle, ColorE::Green, ColorE::Green, zbuffer);
 
-    let mut delta = 50;
-    let triangle = Triangle::from((600 - delta, 400 - delta), (600 - delta, 200 - delta), (200 - delta, 200 - delta));
-    image.draw_triangle(triangle, ColorE::Green, ColorE::White);
+        let mut delta = 50;
+        let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 200 - delta, 0));
+        image.draw_triangle(triangle, ColorE::Green, ColorE::White, zbuffer);
 
-    delta = -delta;
-    let triangle = Triangle::from((600 - delta, 400 - delta), (600 - delta, 200 - delta), (200 - delta, 750 - delta));
-    image.draw_triangle(triangle, ColorE::Red, ColorE::Red);
+        delta = -delta;
+        let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 750 - delta, 0));
+        image.draw_triangle(triangle, ColorE::Red, ColorE::Red, zbuffer);
+    }
     let mut blue = 0;
 
     let mut renderer = Render::new(image);
 
-    let mut scn = scene::Scene::new(w, h);
 
     if true {
         let mut counter = 0;
