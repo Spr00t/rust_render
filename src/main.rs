@@ -171,17 +171,22 @@ fn main() {
 
     let mut scn = scene::Scene::new(w, h);
     {
-        let zbuffer = &mut scn.get_zbuffer();
-        let triangle = Triangle3::from((600, 400, 0), (600, 200, 0), (200, 50, 0));
-        image.draw_triangle(triangle, ColorE::Green, ColorE::Green, zbuffer);
+        let mut zbuffer = scn.get_zbuffer();
+        {
+            let triangle = Triangle3::from((600, 400, 0), (600, 200, 0), (200, 50, 0));
+            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer);
+        }
 
         let mut delta = 50;
-        let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 200 - delta, 0));
-        image.draw_triangle(triangle, ColorE::Green, ColorE::White, zbuffer);
+        {
+            let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 200 - delta, 0));
+            image.draw_triangle(triangle, ColorE::Green, ColorE::White, &mut zbuffer);
+        }
 
         delta = -delta;
+        
         let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 750 - delta, 0));
-        image.draw_triangle(triangle, ColorE::Red, ColorE::Red, zbuffer);
+        image.draw_triangle(triangle, ColorE::Red, ColorE::Red, &mut zbuffer);
     }
     let mut blue = 0;
 
