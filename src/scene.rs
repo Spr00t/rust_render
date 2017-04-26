@@ -30,7 +30,7 @@ pub struct Scene {
     height: u32,
     pub objects: Vec<Rc<RefCell<Object> > >,
     light_direction: Vec3<f32>,
-    zbuffer: Array2d<f32>,
+    zbuffer: Rc<RefCell<Array2d<f32>>>,
 }
 
 impl Scene {
@@ -41,14 +41,15 @@ impl Scene {
             height: height,
             objects: Vec::<Rc<RefCell<Object>>>::new(),
             light_direction: Vec3::<f32> {dx: 0., dy: 0., dz: 0.},
-            zbuffer: Array2d::<f32>::new(f32::MIN, width as usize, height as usize),
+            zbuffer: Rc::new(RefCell::new(
+                Array2d::<f32>::new(f32::MIN, width as usize, height as usize))),
         }
     }
     //pub fn get_zbuffer(&mut self) -> &mut Array2d<f32> {
     //    &mut self.zbuffer
     //}
-    pub fn get_zbuffer(self) -> Array2d<f32> {
-        self.zbuffer
+    pub fn get_zbuffer(&self) -> Rc<RefCell<Array2d<f32>>> {
+        self.zbuffer.clone()
     }
     pub fn add_object(&mut self, object: Rc<RefCell<Object>> ) {
         self.objects.push(object);

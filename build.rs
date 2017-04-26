@@ -70,17 +70,21 @@ let wcd = env::current_dir().unwrap();
        }
    }
 
-   //println!("{}", String::from_utf8(export_output.stdout).unwrap());
+
    let is_msys = env::var("MSYSTEM").is_ok() ;
 
-   let cmake_output = Command::new("cmake").current_dir(&build).output().unwrap_or_else(|e| {
+
+   let cmake_output = Command::new("cmake").arg(".").current_dir(&build).output().unwrap_or_else(|e| {
        panic!("Failed to run cmake: {}", e);
    });
+   println!("cmake");
 
-   let cmake_stderr = String::from_utf8(cmake_output.stderr).unwrap();
-   if !cmake_stderr.is_empty() {
-       panic!("cmake produced stderr: {}", cmake_stderr);
-   }
+    let status = Command::new("make")
+        .current_dir(&build)
+        .status()
+        .expect("failed to execute process");
+   if ! status.success() { panic!("failed") };
+
 
    Command::new("make").current_dir(&build).output().unwrap_or_else(|e| {
        panic!("Failed to run make: {}", e);

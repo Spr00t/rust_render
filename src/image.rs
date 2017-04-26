@@ -89,30 +89,45 @@ impl Image {
     pub fn draw_line_c<C>(&mut self, x0_: i32, y0_: i32, z0_: i32, x1_: i32, y1_: i32, z1_: i32, color: C, zbuffer: &mut Array2d<f32>)
         where C: Convert<Color> + Copy
     {
-        /*println!("draw_line x0={} y0={} x1={} y1={}",
-                x0_, y0_, x1_, y1_);*/
+
+        println!("draw_line x0={} y0={} z0={} x1={} y1={} z1={}",
+                x0_, y0_, z0_, x1_, y1_, z0_);
         let (mut x0, mut y0, mut x1, mut y1)
             = (max(x0_, 0), max(y0_, 0), max(x1_, 0), max(y1_, 0));
+
         let (mut z0, mut z1) = (z0_, z1_);
 
 
-        /*println!("draw_line conv x0={} y0={} x1={} y1={}",
-                x0, y0, x1, y1);*/
 
         x1 = if x1 >= self.w as i32{ self.w as i32 - 1 } else { x1 };
         y1 = if y1 >= self.h as i32{ self.h as i32 - 1 } else { y1 };
         let mut steep = false;
         if (x0 as i32 - x1 as i32).abs() < (y0  as i32 - y1  as i32 ).abs() {
+            println!("draw_line steep-1 x0={} y0={} z0={} x1={} y1={} z1={}",
+                    x0_, y0_, z0_, x1_, y1_, z1_);
             swap(&mut x0, &mut y0);
+            println!("draw_line steep-2 x0={} y0={} z0={} x1={} y1={} z1={}",
+                    x0_, y0_, z0_, x1_, y1_, z1_);
             swap(&mut x1, &mut y1);
+            println!("draw_line steep-3 x0={} y0={} z0={} x1={} y1={} z1={}",
+                    x0_, y0_, z0_, x1_, y1_, z1_);
             steep = true;
         }
+        println!("draw_line steep1 x0={} y0={} z0={} x1={} y1={} z1={}",
+                x0_, y0_, z0_, x1_, y1_, z1_);
         if x0 >x1 { // make it left-to-right
             swap(&mut x0, &mut x1);
             swap(&mut y0, &mut y1);
             swap(&mut z0, &mut z1);
         }
-        let delta_z = (z1 - z0) / (x1 - x0);
+        println!("draw_line steep2 x0={} y0={} z0={} x1={} y1={} z1={}",
+                x0_, y0_, z0_, x1_, y1_, z1_);
+
+        let delta_z =
+            if x1 != x0 { (z1 - z0) / (x1 - x0) }
+        else
+            {0};
+
         let mut z = z0;
         for x in x0..x1+1 {
             let t = (x-x0) as f32/ (x1 - x0) as f32;

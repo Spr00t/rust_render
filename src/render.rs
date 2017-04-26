@@ -28,11 +28,11 @@ impl Render {
         }
     }
     pub fn draw_scene(&mut self, scn: &mut Scene) {
-        let zbuffer = scn.get_zbuffer();
+        let mut zbuffer = scn.get_zbuffer();
         for rc_obj in & scn.objects {
             if let Some(obj) = rc_obj.try_borrow().ok() {
                 let (triangles, vertex) = (&obj.triangles, &obj.vertex);
-                draw_internal(&mut self.image, triangles, vertex, &mut zbuffer);
+                draw_internal(&mut self.image, triangles, vertex, &mut zbuffer.borrow_mut());
             }
         }
     }
