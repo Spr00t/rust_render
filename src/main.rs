@@ -8,6 +8,10 @@ mod geometry3;
 mod render;
 mod scene;
 mod array2d;
+mod tgacanvas;
+
+#[macro_use]
+extern crate log;
 
 use geometry::*;
 use geometry3::*;
@@ -26,6 +30,7 @@ use std::f32;
 use std::cmp::*;
 use std::io::{BufReader};
 use std::io::prelude::*;
+use tgacanvas::*;
 
 
 
@@ -122,6 +127,7 @@ fn main() {
 
     let mut app = Application::new();
 
+    let diffuse_map = TgaCanvas::read("data/african_head_diffuse.tga");
 
     println!("Open file");
     let f = File::open(
@@ -166,27 +172,81 @@ fn main() {
     let mut image = Image::new(w , h, ColorE::Black);
 
 
+
+
     //image.draw_line( (0, 6), (w as i32, 10), ColorE::Green);
     let mut counter = 0;
 
     let mut scn = scene::Scene::new(w, h);
     {
         let mut zbuffer = scn.get_zbuffer();
-        {
-            let triangle = Triangle3::from((600, 400, 0), (600, 200, 0), (200, 50, 0));
-            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
-        }
+//        {
+//            let triangle = Triangle3::from(
+//                                            (288.91104, 668.4588, 668.4588),
+//                                            (265.33224, 668.5404, 475.0368),
+//                                            (265.31586, 711.676, 445.1092));
+//            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
+//        }
 
-        let mut delta = 50;
-        {
-            let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 200 - delta, 0));
-            image.draw_triangle(triangle, ColorE::Green, ColorE::White, &mut zbuffer.borrow_mut());
-        }
+//        let mut zbuffer = scn.get_zbuffer();
+//        {
+//            let triangle = Triangle3::from(
+//                                            (100, 50, 0),
+//                                            (150, 100, 0),
+//                                            (100, 100, 0));
+//            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
+//        }
 
-        delta = -delta;
+//        let mut zbuffer = scn.get_zbuffer();
+//        {
+//            let triangle = Triangle3::from(
+//                                            (300, 50, 0),
+//                                            (300, 100, 0),
+//                                            (250, 100, 0));
+//            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
+//        }
+
+
+//        let mut zbuffer = scn.get_zbuffer();
+//        {
+//            let triangle = Triangle3::from(
+//                                            (200, 50, 0),
+//                                            (200, 150, 0),
+//                                            (150, 100, 0));
+//            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
+//        }
+
+//        let mut zbuffer = scn.get_zbuffer();
+//        {
+//            let triangle = Triangle3::from(
+//                                            (500, 150, 0),
+//                                            (550, 200, 0),
+//                                            (500, 50, 0));
+//            image.draw_triangle(triangle, ColorE::Green, ColorE::Green, &mut zbuffer.borrow_mut());
+//        }
+
+
+
+//        {
+//            let triangle = Triangle3::from((200, 400, 150),
+//                                           (600, 600, 200),
+//                                           (600, 200, 200));
+//            image.draw_triangle(triangle, ColorE::White, ColorE::White, &mut zbuffer.borrow_mut());
+//        }
+
+//    image.draw_line((200., 300., 400.),
+//                    (600., 300., 300.), ColorE::Red, &mut zbuffer.borrow_mut());
+
+
+    for y in 200..205+1 {
+        image.draw_line((250., y as f32, 200.),
+                        (200., y as f32, 150.), ColorE::Blue, &mut zbuffer.borrow_mut());
+    }
+
+        //delta = -delta;
         
-        let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 750 - delta, 0));
-        image.draw_triangle(triangle, ColorE::Red, ColorE::Red, &mut zbuffer.borrow_mut());
+        //let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 750 - delta, 0));
+        //image.draw_triangle(triangle, ColorE::Red, ColorE::Red, &mut zbuffer.borrow_mut());
     }
     let mut blue = 0;
 

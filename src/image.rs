@@ -3,12 +3,14 @@ use std::mem::swap;
 use std::collections::HashMap;
 use std::f32;
 use std::fmt::Display;
-use std::cmp::{max, min};
+use std::cmp::{max, min, Ordering};
 use geometry::*;
 use geometry3::*;
 use geometry;
 use array2d::*;
 use std::convert::*;
+
+
 
 
 #[allow(dead_code)]
@@ -79,121 +81,134 @@ impl Image {
     }
     pub fn draw_line<T1, T2, C>(&mut self, p1: T1, p2: T2, color: C,
         zbuffer: &mut Array2d<f32>)
-        where T1: Convert<Point3<i32>>, T2: Convert<Point3<i32>>, C: Convert<Color> + Copy
+        where T1: Convert<Point3<f32>>, T2: Convert<Point3<f32>>, C: Convert<Color> + Copy
     {
         let (p1_, p2_) = (p1.convert(), p2.convert());
         self.draw_line_c(p1_.x, p1_.y, p1_.z,
                          p2_.x, p2_.y, p2_.z,
                          color.convert(), zbuffer);
     }
-    pub fn draw_line_c<C>(&mut self, x0_: i32, y0_: i32, z0_: i32, x1_: i32, y1_: i32, z1_: i32, color: C, zbuffer: &mut Array2d<f32>)
+    pub fn draw_line_c<C>(&mut self, x0_: f32, y0_: f32, z0_: f32, x1_: f32, y1_: f32, z1_: f32, color: C, zbuffer: &mut Array2d<f32>)
         where C: Convert<Color> + Copy
     {
 
-        println!("draw_line x0={} y0={} z0={} x1={} y1={} z1={}",
-                x0_, y0_, z0_, x1_, y1_, z0_);
+//        println!("draw_line x0={} y0={} z0={} x1={} y1={} z1={}",
+//                x0_, y0_, z0_, x1_, y1_, z0_);
         let (mut x0, mut y0, mut x1, mut y1)
-            = (max(x0_, 0), max(y0_, 0), max(x1_, 0), max(y1_, 0));
+            = (mx(x0_, 0.),
+                mx(y0_, 0.),
+                mx(x1_, 0.),
+                mx(y1_, 0.));
 
         let (mut z0, mut z1) = (z0_, z1_);
 
 
 
-        x1 = if x1 >= self.w as i32{ self.w as i32 - 1 } else { x1 };
-        y1 = if y1 >= self.h as i32{ self.h as i32 - 1 } else { y1 };
+        x1 = if x1 >= self.w as f32 { self.w as f32 - 1. } else { x1 };
+        y1 = if y1 >= self.h as f32 { self.h as f32 - 1. } else { y1 };
         let mut steep = false;
         if (x0 as i32 - x1 as i32).abs() < (y0  as i32 - y1  as i32 ).abs() {
-            println!("draw_line steep-1 x0={} y0={} z0={} x1={} y1={} z1={}",
-                    x0_, y0_, z0_, x1_, y1_, z1_);
+            //println!("draw_line steep-1 x0={} y0={} z0={} x1={} y1={} z1={}",
+            //        x0_, y0_, z0_, x1_, y1_, z1_);
             swap(&mut x0, &mut y0);
-            println!("draw_line steep-2 x0={} y0={} z0={} x1={} y1={} z1={}",
-                    x0_, y0_, z0_, x1_, y1_, z1_);
+            //println!("draw_line steep-2 x0={} y0={} z0={} x1={} y1={} z1={}",
+            //        x0_, y0_, z0_, x1_, y1_, z1_);
             swap(&mut x1, &mut y1);
-            println!("draw_line steep-3 x0={} y0={} z0={} x1={} y1={} z1={}",
-                    x0_, y0_, z0_, x1_, y1_, z1_);
+            //println!("draw_line steep-3 x0={} y0={} z0={} x1={} y1={} z1={}",
+            //        x0_, y0_, z0_, x1_, y1_, z1_);
             steep = true;
         }
-        println!("draw_line steep1 x0={} y0={} z0={} x1={} y1={} z1={}",
-                x0_, y0_, z0_, x1_, y1_, z1_);
+//        println!("draw_line steep1 x0={} y0={} z0={} x1={} y1={} z1={}",
+//                x0_, y0_, z0_, x1_, y1_, z1_);
         if x0 >x1 { // make it left-to-right
             swap(&mut x0, &mut x1);
             swap(&mut y0, &mut y1);
             swap(&mut z0, &mut z1);
         }
-        println!("draw_line steep2 x0={} y0={} z0={} x1={} y1={} z1={}",
-                x0_, y0_, z0_, x1_, y1_, z1_);
+//        println!("draw_line steep2 x0={} y0={} z0={} x1={} y1={} z1={}",
+//                x0_, y0_, z0_, x1_, y1_, z1_);
 
         let delta_z =
             if x1 != x0 { (z1 - z0) / (x1 - x0) }
         else
-            {0};
+            {0.};
 
         let mut z = z0;
-        for x in x0..x1+1 {
-            let t = (x-x0) as f32/ (x1 - x0) as f32;
+        for x in x0.round() as i32 ..(x1+1.0).round() as i32 {
+            let t = (x as f32-x0) as f32/ (x1 - x0) as f32;
             let y = y0 as f32* (1.- t) + y1 as f32 * t;
             let w = self.w;
             z = z + delta_z;
-            /*println!("t={} x={} y={} x0={} y0={} x1={} y1={} steep={} ",
-                t, x, y, x0, y0, x1, y1, steep);*/
+            println!("t={} x={} y={} x0={} y0={} x1={} y1={} steep={} ",
+                t, x, y, x0, y0, x1, y1, steep);
             if steep {
-                self.draw_pixel(y as i32, x as i32, z, color.convert(), zbuffer);
+                self.draw_pixel(y, x as f32, z, color.convert(), zbuffer);
             } else {
-                self.draw_pixel(x as i32, y as i32, z, color.convert(), zbuffer);
+                self.draw_pixel(x as f32, y, z, color.convert(), zbuffer);
             }
         }
     }
 
 
-    pub fn draw_pixel(&mut self, x_: i32, y_: i32, z_: i32, color: Color, zbuffer: &mut Array2d<f32>) {
-        let (x0, y0) = (max(x_, 0), max(y_, 0));
-        let (x, y) = (min(self.w as i32 - 1, x0), min(self.h as i32, y0));
+    pub fn draw_pixel<C>(&mut self, x_: f32, y_: f32, z_: f32, color: C, zbuffer: &mut Array2d<f32>)
+        where C: Convert<Color> + Copy
+    {
+        let (x, y) = (x_.round() as i32, y_.round() as i32);
+        if (x < 0 || x > self.w as i32 - 1 || y <= 0 || y > self.h as i32 - 1) {
+            return
+        }
+        //if x < 5 && y > 500 {panic!();}
+
         //println!("draw pixel {} {}", x, y);
         if let Some(v) = self.data.get_mut(x, self.h as usize - y as usize - 1) {
             if let Some(zb) = zbuffer.get_mut(x, self.h as usize - y as usize - 1) {
-                if (*zb as i32) < z_ {
-                    *v = color.c;
-                    *zb = z_ as f32;
+                if (*zb) < z_ {
+                    *v = color.convert().c;
+                    *zb = z_;
+                } else {
+                    println!("draw pixel not succeeded: {} {} {} zbuffer={}", x, y, z_, (*zb));
                 }
             }
         }
+
     }
 
     fn fill_down<T>(&mut self, t: T, color_: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
-        where T: geometry::Convert<Triangle3<i32>>
+        where T: geometry::Convert<Triangle3<f32>>
     {
         let mut tr = t.convert();
 
         if tr.a.x > tr.b.x {
             swap(&mut tr.a, &mut tr.b);
         }
-        let (a, b, c): (Point3<i32>, Point3<i32>, Point3<i32>) = (tr.a, tr.b, tr.c);
+        let (a, b, c): (Point3<f32>, Point3<f32>, Point3<f32>) = (tr.a, tr.b, tr.c);
 
         //println!("fill_down: a={} b={}, c={}", a, b, c);
 
         let x = a.x;
-        let delta_left  = (c.x - a.x) as f32 / (c.y - a.y) as f32;
+        let delta_left  = (c.x - a.x) / (c.y - a.y);
         let delta_right = (b.x - c.x) as f32 / (c.y - a.y) as f32;
 
-        let delta_z_left  = (c.z - a.z) as f32 / (c.y - a.y) as f32;
-        let delta_z_right = (b.z - c.z) as f32 / (c.y - a.y) as f32;
+        let delta_z_left  = (c.z - a.z) / (c.y - a.y);
+        let delta_z_right = (b.z - c.z) / (c.y - a.y);
 
         //println!("fill_down: delta_left={} delta_right={}", delta_left, delta_right);
         let mut x_left = a.x as f32;
         let mut x_right = b.x as f32;
 
-        let mut z_left = a.z as f32;
-        let mut z_right = b.z as f32;
+        let mut z_left = a.z;
+        let mut z_right = b.z;
 
-        let delta_z = (z_right - z_left) as f32 / (c.y - a.y) as f32;
+        let delta_z = (z_right - z_left) as f32 / (b.y - a.y) as f32;
         let mut z;
-        for y in a.y..c.y {
+        for y in a.y.round() as i32..c.y.round() as i32
+        {
             //println!("fill_down: y={} x_left={}, x_right={}", y, x_left, x_right);
             z = z_left;
             for x in x_left as i32..x_right as i32+1 {
                 //println!("fill_down: x={} y={} x_left={}, x_right={}", x, y, x_left, x_right);
                 z = z + delta_z;
-                self.draw_pixel(x as i32, y as i32, z as i32, fill_color_.into(), zbuffer);
+                self.draw_pixel(x as f32, y as f32, z, fill_color_, zbuffer);
             }
             z_left = z_left + delta_z_left;
             x_left  = x_left + delta_left;
@@ -201,57 +216,97 @@ impl Image {
         }
     }
 
-    fn fill_up<T>(&mut self, t: T, color_: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
-        where T: Convert<Triangle3<i32>>
+
+    fn fill_bottom(&mut self,
+        xtop: f32,
+        ytop: f32,
+        ztop: f32,
+
+        mut xleftbottom: f32,
+        mut xrightbottom: f32,
+        ybottom: f32,
+        mut zleftbottom: f32,
+        mut zrightbottom: f32,
+        color_: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
     {
-        let mut tr = t.convert();
+        let direction = if ytop < ybottom { 1 } else {-1};
 
-        if tr.b.x > tr.c.x {
-            swap(&mut tr.b, &mut tr.c);
+        println!("fillup start");
+        if xleftbottom > xrightbottom {
+            swap(&mut xleftbottom, &mut xrightbottom);
+            swap(&mut zleftbottom, &mut zrightbottom);
         }
-        let (a, b, c) = (tr.a, tr.b, tr.c);
 
-        //println!("fill_up: a={} b={}, c={}", a, b, c);
+        println!("xtop={}\nytop={}\nztop={}\nxleftbottom={}\nxrightbottom={}\nybottom={}\nzleftbottom={}\nzrightbottom={}\n",
+            xtop, ytop, ztop,
+            xleftbottom,
+            xrightbottom,
+            ybottom,
+            zleftbottom,
+            zrightbottom,
+            );
 
-        let x = a.x;
-        let delta_left  = (a.x - b.x) as f32 / (c.y - a.y) as f32;
-        let delta_right = (c.x - a.x) as f32 / (c.y - a.y) as f32;
+        let zleft_current = ztop;
+        let zright_current = ztop;
+
+        let diff_y = (-ybottom.round()  + ytop.round());
+
+        let (delta_zleft, delta_zright) = if ytop - ybottom == 0. { (0., 0.) } else {
+            ((ztop - zleftbottom) / (direction as f32 * diff_y),
+             (ztop - zrightbottom) / (direction as f32 * diff_y))
+        };
+
+        let mut zleft  = ztop;
+        let mut zright = ztop;
+
+        let mut xleft  = xtop;
+        let mut xright = xtop;
+
+        println!("diff_y={} ", diff_y);
+
+        let (delta_xleft, delta_xright) = if ytop - ybottom == 0. { (0., 0.) } else {
+            ((xtop - xleftbottom) / (direction as f32 * diff_y),
+             (xtop - xrightbottom) / (direction as f32  * diff_y))
+        };
+
+        println!("delta_xleft={} delta_xright={}", delta_xleft, delta_xright);
+
+        let mut y: i32 = ytop.round() as i32;
+        while direction * y < direction * ybottom.round() as i32 + 1{
+
+            let mut z = zleft;
+            let delta_z = if xleft == xright
+                {0.}
+            else
+                { (zright - zleft) / (xright - xleft) };
 
 
-        let delta_z_left  = (a.z - b.z) as f32 / (c.y - a.y) as f32;
-        let delta_z_right = (c.z - a.z) as f32 / (c.y - a.y) as f32;
+            println!("y={}\nxleft={} xright={}\nzleft={} zright{}", y, xleft, xright, zleft, zright);
 
-        //println!("fill_up: delta_left={} delta_right={}", delta_left, delta_right);
-        let mut x_left = x as f32;
-        let mut x_right = x as f32;
-        let mut z_left = b.z as f32;
-        let mut z_right = c.z as f32;
-        for y in a.y..b.y {
-            //println!("fill_up:y={} x_left={}, x_right={}", y, x_left, x_right);
-            let mut z = z_left;
-            let diff_x = x_right - x_left;
-            let delta_z = (z_right - z_left) /
-                        if diff_x < 1e-8 {1.} else {diff_x}; //avoid division by zero
-            for x in x_left as i32..x_right as i32+1 {
-                //println!("fill_up:x={} y={} x_left={}, x_right={}", x, y, x_left, x_right);
-                self.draw_pixel(x as i32, y as i32, z as i32, fill_color_.into(), zbuffer);
-                z = z + delta_z;
+            for x in xleft.round() as i32..xright.round() as i32+1 {
+                println!("pixel x={} y={} z={}", x, y, z);
+                self.draw_pixel(x as f32, y as f32, z, fill_color_, zbuffer);
+                z = z + delta_z
             }
-            z_left  = z_left  - delta_z_left;
-            z_right = z_right + delta_z_left;
+            zleft  = zleft + delta_zleft;
+            zright = zright + delta_zright;
 
-            x_left  = x_left - delta_left;
-            x_right = x_right + delta_right;
+            xleft  = xleft + delta_xleft;
+            xright = xright + delta_xright;
+            y = y + direction;
         }
+        println!("xleft={} xright={}", xleft, xright);
+        println!("zleft={} zright={}", zleft, zright);
+        println!("fillup end");
     }
     pub fn draw_triangle<T, C1, C2>(&mut self,
                                     t: T,
                                     color_: C1,
                                     fill_color_: C2,
                                     zbuffer: &mut Array2d<f32>)
-        where T: Convert<Triangle3<i32>>, C1: Convert<Color>, C2: Convert<Color>
+        where T: Convert<Triangle3<f32>>, C1: Convert<Color>, C2: Convert<Color>
     {
-        let mut triangle : Triangle3<i32> = t.convert();
+        let mut triangle : Triangle3<f32> = t.convert();
         let color: Color = color_.convert();
         let fill: Color = fill_color_.convert();
 
@@ -259,9 +314,11 @@ impl Image {
 
         //let point_left;
         //let point_right;
-        //println!("Ax={} Ay={} Bx={} By={} Cx={} Cy={}", triangle.a.x, triangle.a.y,
-        //                                                triangle.b.x, triangle.b.y,
-        //                                                triangle.c.x, triangle.c.y);
+
+        println!("draw_triangle: \nAx={} Ay={} Zy={}\nBx={} By={} Bz={}\nCx={} Cy={} Cz={}",
+                 triangle.a.x, triangle.a.y, triangle.a.y,
+                 triangle.b.x, triangle.b.y, triangle.b.z,
+                 triangle.c.x, triangle.c.y, triangle.c.z);
 
         let mut has_middle = false;
         let mut k = 0.;
@@ -269,9 +326,9 @@ impl Image {
         let (a, b, c) = (triangle.a, triangle.b, triangle.c);
 
         if b.y != a.y {
-            k = (c.y - b.y) as f64 / (b.y - a.y) as f64;
-            middle.x = ((c.x as f64 + k * a.x as f64) / (1. as f64 + k) ) as i32;
-            middle.z = ((c.z as f64 + k * a.z as f64) / (1. as f64 + k) ) as i32;
+            k = (c.y - b.y) as f32 / (b.y - a.y) as f32;
+            middle.x = (c.x as f32 + k * a.x as f32) / (1. as f32 + k);
+            middle.z = (c.z as f32 + k * a.z as f32) / (1. as f32 + k);
             //println!("k={} middle={}", k, x_middle);
 
             has_middle = true;
@@ -279,20 +336,35 @@ impl Image {
         }
 
         if has_middle {
-            let tr : Triangle3<i32> = Triangle3::from(a, b, middle);
-            self.fill_up(tr, color, fill, zbuffer);
+            let tr : Triangle3<f32> = Triangle3::from(a, b, middle);
+            self.fill_bottom(a.x, a.y, a.z,
+                         b.x, middle.x,
+                         b.y,
+                         b.z, middle.z,
+                color, fill, zbuffer);
 
-            let tr : Triangle3<i32> = Triangle3::from(b, middle, c);
-            self.fill_down(tr, color, fill, zbuffer);
+            let tr : Triangle3<f32> = Triangle3::from(b, middle, c);
+            self.fill_bottom(c.x, c.y, c.z,
+                middle.x, b.x,
+                b.y,
+                middle.z, b.z,
+                color, fill, zbuffer);
         } else {
-            self.fill_down( (a, b, c), color, fill, zbuffer);
+        self.fill_bottom(c.x, c.y, c.z,
+                     b.x, c.x,
+                     b.y,
+                     b.x, c.x,
+            color, fill, zbuffer);
         }
 
         // Draw perimeter
+        println!("{} ab", line!());
         self.draw_line(triangle.a, triangle.b, color, zbuffer);
 
+        println!("{} bc", line!());
         self.draw_line(triangle.b, triangle.c, color, zbuffer);
 
+        println!("{} ac", line!());
         self.draw_line(triangle.a, triangle.c, color, zbuffer);
 
 

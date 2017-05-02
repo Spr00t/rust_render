@@ -64,7 +64,7 @@ pub fn draw_internal(image: &mut Image,
                     println!("before normalize vec3d {}", vec_3d);
                     vec_3d.normalize();
 
-                    let mut light_direction = Vec3::<f32> { dx: 0., dy: 0., dz: -1. };
+                    let mut light_direction = Vec3::<f32> { dx: 0.5, dy: 0., dz: -1. };
 
                     light_direction.normalize();
 

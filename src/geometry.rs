@@ -2,11 +2,34 @@ use std;
 use std::mem::swap;
 use std::collections::HashMap;
 use std::cmp::Ordering::*;
+use std::cmp::*;
 use std::f32;
 use std::fmt::*;
 use std::convert::*;
 use std::hash::*;
 use std::ops::*;
+
+pub fn mx<T>(a: T, b: T) -> T
+    where T: Copy + Clone + PartialOrd
+{
+    if let Some(x) = a.partial_cmp(&b) {
+        if x == Ordering::Greater {
+            return a
+        }
+    }
+    b
+}
+pub fn mn<T>(a: T, b: T) -> T
+    where T: Copy + Clone + PartialOrd
+{
+    if let Some(x) = a.partial_cmp(&b) {
+        if x == Ordering::Less {
+            return a
+        }
+    }
+    b
+}
+
 
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub struct Point<T>
