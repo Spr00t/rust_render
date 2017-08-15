@@ -9,6 +9,11 @@ use std::convert::*;
 use std::hash::*;
 use std::ops::*;
 
+#[macro_export]
+macro_rules! get {
+    ($e:expr) => (match $e { Some(e) => e, None => return None });
+}
+
 pub fn mx<T>(a: T, b: T) -> T
     where T: Copy + Clone + PartialOrd
 {

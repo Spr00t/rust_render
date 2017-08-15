@@ -16,6 +16,9 @@ use std::io::{BufReader};
 use std::io::prelude::*;
 use std::rc;
 use std::rc::*;
+use std::cell::RefCell;
+
+
 
 pub struct Render
 {
@@ -29,32 +32,39 @@ impl Render {
     }
     pub fn draw_scene(&mut self, scn: &mut Scene) {
         let mut zbuffer = scn.get_zbuffer();
-        for rc_obj in & scn.objects {
-            if let Some(obj) = rc_obj.try_borrow().ok() {
-                let (triangles, vertex) = (&obj.triangles, &obj.vertex);
-                draw_internal(&mut self.image, triangles, vertex, &mut zbuffer.borrow_mut());
+        let count = scn.get_objects().len();
+        for i in 0..count {
+            //let rc_obj = scn.get_objects()[i].clone();
+            let opt_object: Rc<RefCell<Model>>;
+            {
+                opt_object = scn.get_objects()[i].clone();
+            }
+            let obj = opt_object.try_borrow().ok().unwrap();
+            {   
+                draw_internal(&mut self.image, &obj, &mut zbuffer.borrow_mut(), 
+                    scn.get_texture(obj.texture_id));
             }
         }
     }
-    /*
-    pub fn draw(&mut self, triangles: & Vec<(usize, usize, usize)>, vertex: & Vec<(f32, f32, f32)>) {
-        draw_internal(&mut self.image, triangles, vertex,  &mut scn.get_zbuffer());
-    }
-    */
 }
-
+pub fn get_texture_color(intensity: f32, 
+                        coords: Triangle3<f32>, 
+                        coords_t: Option<Triangle3<f32>>,
+                        texture: Option<Rc<RefCell<Image>>>) -> f32{
+    return intensity.abs();
+}
 pub fn draw_internal(image: &mut Image,
-                     triangles: & Vec<(usize, usize, usize)>,
-                     vertex: & Vec<(f32, f32, f32)>,
-                     zbuffer: &mut Array2d<f32>)
+                     model: & Model,
+                     zbuffer: &mut Array2d<f32>,
+                     texture: Option<Rc<RefCell<Image>>>)
 {
     println!("draw_internal");
-    for triangle in triangles.into_iter() {
-        let (a, b, c) = *triangle;
+    for face in model.faces.iter() {
+        let (a, b, c) = face.v_index;
 
-        if let Some(v1) = vertex.get(a - 1) {
-            if let Some(v2) = vertex.get(b - 1) {
-                if let Some(v3) = vertex.get(c - 1) {
+        if let Some(v1) = model.vertexs.get(a - 1) {
+            if let Some(v2) = model.vertexs.get(b - 1) {
+                if let Some(v3) = model.vertexs.get(c - 1) {
                     let p3: Point3<f32> = (*v3).convert();
                     let p2: Point3<f32> = (*v2).convert();
 
@@ -86,13 +96,23 @@ pub fn draw_internal(image: &mut Image,
 
                     if intensity < 0. {
                         let triangle = Triangle3::from((v1.0, v1.1, v1.2), (v2.0, v2.1, v2.2), (v3.0, v3.1, v3.2));
+                        let (a_t, b_t, c_t) = face.vt_index;
 
+                        let mut triangle_texture: Option<Triangle3<f32>> = None;
+                        if let (Some(&v1_t), Some(&v2_t), Some(&v3_t)) 
+                                = (model.texture_vertexs.get(a_t), 
+                                    model.texture_vertexs.get(b_t),  
+                                    model.texture_vertexs.get(c_t)) {
+                            triangle_texture = Some(Triangle3::<f32> {
+                                a: v1_t.convert(), b: v2_t.convert(), c: v3_t.convert()
+                            });
+                        } 
                         //let fill_color = Color::from_rgb(rand::random::<u32>() % 255, random::<u32>() % 255, random::<u32>() % 255);
-                        let color_value = (255. * intensity.abs()) as u32;
+                        let color_value = (255. * get_texture_color(intensity, triangle, triangle_texture, texture.clone())) as u32;
                         println!("color_value {}", color_value);
                         if true {
                             let fill_color = Color::from_rgb(color_value, color_value, color_value);
-                            image.draw_triangle(triangle, fill_color, fill_color, zbuffer);
+                            image.draw_triangle(triangle, fill_color, fill_color, zbuffer, None);
                         }
                     }
 

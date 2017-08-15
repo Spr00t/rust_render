@@ -8,6 +8,7 @@ authors = ["Spr00t"]
 log = "0.3"
 libc = "*"
 rand = "*"
+imagefmt = "*"
 env_logger = "0.3"
 
 [build-dependencies]

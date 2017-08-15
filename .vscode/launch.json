@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "skipFiles": [
+                "slice.rs", "mod.rs"
+            ],
+            "name": "Launch",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceRoot}/target/debug/rust_renderer",
+            "args": ["african_head.txt"],
+            "cwd": "/Users/Shared/common/Projects/rust_render_git"
+        }
+    ]
+}

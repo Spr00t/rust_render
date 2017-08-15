@@ -79,6 +79,15 @@ impl Image {
             h: h
         }
     }
+    pub fn from_buffer(w: u32, h: u32, array: Array2d<u32>) -> Self
+    {
+
+        Image {
+            data: array,
+            w: w,
+            h: h
+        }
+    }
     pub fn draw_line<T1, T2, C>(&mut self, p1: T1, p2: T2, color: C,
         zbuffer: &mut Array2d<f32>)
         where T1: Convert<Point3<f32>>, T2: Convert<Point3<f32>>, C: Convert<Color> + Copy
@@ -154,7 +163,7 @@ impl Image {
         where C: Convert<Color> + Copy
     {
         let (x, y) = (x_.round() as i32, y_.round() as i32);
-        if (x < 0 || x > self.w as i32 - 1 || y <= 0 || y > self.h as i32 - 1) {
+        if x < 0 || x > self.w as i32 - 1 || y <= 0 || y > self.h as i32 - 1 {
             return
         }
         //if x < 5 && y > 500 {panic!();}
@@ -249,7 +258,7 @@ impl Image {
         let zleft_current = ztop;
         let zright_current = ztop;
 
-        let diff_y = (-ybottom.round()  + ytop.round());
+        let diff_y = -ybottom.round()  + ytop.round();
 
         let (delta_zleft, delta_zright) = if ytop - ybottom == 0. { (0., 0.) } else {
             ((ztop - zleftbottom) / (direction as f32 * diff_y),
@@ -303,7 +312,8 @@ impl Image {
                                     t: T,
                                     color_: C1,
                                     fill_color_: C2,
-                                    zbuffer: &mut Array2d<f32>)
+                                    zbuffer: &mut Array2d<f32>,
+                                    texture: Option<&Image>)
         where T: Convert<Triangle3<f32>>, C1: Convert<Color>, C2: Convert<Color>
     {
         let mut triangle : Triangle3<f32> = t.convert();
