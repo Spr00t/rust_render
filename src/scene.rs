@@ -1,18 +1,13 @@
 extern crate rand;
-use std;
 
-use geometry::*;
 use geometry3::*;
 use image::*;
-use bridge::Application;
 use array2d::*;
-use rand::*;
+
 use std::f32;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::ops::Deref;
-
 
 pub struct Face {
     pub v_index: (usize, usize, usize),
@@ -25,7 +20,7 @@ pub struct Model {
     pub faces: Vec<Face>,
     pub texture_id: u32
 }
-
+#[allow(dead_code)]
 pub struct Scene {
     width: u32,
     height: u32,

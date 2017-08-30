@@ -4,28 +4,24 @@ extern crate imagefmt;
 
 mod bridge;
 mod image;
+
 #[macro_use]
 mod geometry;
+
 mod geometry3;
 mod render;
 mod scene;
 mod array2d;
+mod matrix;
 
-#[macro_use]
 extern crate log;
-use std::env::home_dir;
 use std::path::Path;
 
-
-use geometry::*;
-use geometry3::*;
 use image::*;
 use bridge::Application;
 use render::*;
-use rand::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-
 use scene::Face;
 use scene::Model;
 //use scene;
@@ -33,26 +29,22 @@ use scene::Model;
 use std::fs::File;
 use std:: env;
 use std::f32;
-use std::cmp::*;
 use std::io::{BufReader};
 use std::io::prelude::*;
-use imagefmt::{ColFmt, ColType};
+use imagefmt::{ColFmt};
 use array2d::*;
-
-
-
 
 trait GetTuple3 {
     type Item;
-    fn getTuple3(self) -> Option<(Self::Item, Self::Item, Self::Item)>;
+    fn get_tuple3(self) -> Option<(Self::Item, Self::Item, Self::Item)>;
 }
 trait GetTuple2 {
     type Item;
-    fn getTuple2(self) -> Option<(Self::Item, Self::Item)>;
+    fn get_tuple2(self) -> Option<(Self::Item, Self::Item)>;
 }
 impl <T: Clone> GetTuple2 for Vec<T> {
     type Item = T;
-    fn getTuple2(self) -> Option<(T, T)> {
+    fn get_tuple2(self) -> Option<(T, T)> {
         if let (Some(a), Some(b)) = (self.get(0), self.get(1)) {
             return Some((a.clone(), b.clone()));
         }
@@ -62,7 +54,7 @@ impl <T: Clone> GetTuple2 for Vec<T> {
 
 impl <T: Clone> GetTuple3 for Vec<T> {
     type Item = T;
-    fn getTuple3(self) -> Option<(T, T, T)> {
+    fn get_tuple3(self) -> Option<(T, T, T)> {
         let a = get!(self.get(0));
         let b = get!(self.get(1));
         let c = get!(self.get(2));
@@ -89,7 +81,7 @@ fn read_obj<'a, T: BufRead>(reader: &'a mut T,
 
 
             if let Some(first) = words.next() {
-                let mut b_split = RefCell::new(words);
+                let b_split = RefCell::new(words);
 
                 let read_coord = || -> Option<(f32, f32, f32)> {
                     let mut words_c = b_split.borrow_mut();
@@ -103,7 +95,7 @@ fn read_obj<'a, T: BufRead>(reader: &'a mut T,
                                 panic!("parsing error at line {}, reason={}", line_number, e); }
                             })
                         .collect::<Vec<f32>>();
-                    if let Some(t) = numbers.getTuple3() {
+                    if let Some(t) = numbers.get_tuple3() {
                         println!("Add new vertex {} {} {}", t.0, t.1, t.2 );
                         return Some(t)
                     };
@@ -132,10 +124,10 @@ fn read_obj<'a, T: BufRead>(reader: &'a mut T,
                                     .take(2)
                                     .filter_map(|v| v.parse::<usize>().ok()) 
                                     .collect::<Vec<usize>>()
-                                    .getTuple2()
+                                    .get_tuple2()
                             })
                             .collect::<Vec<(usize, usize)>>();
-                        if let Some(t) = numbers.getTuple3() {
+                        if let Some(t) = numbers.get_tuple3() {
                             //println!("Add new triangle {} {} {}", t.0, t.1, t.2 );
                             let face = Face {
                                 v_index:  ((t.0).0, (t.1).0, (t.2).0),
@@ -151,7 +143,7 @@ fn read_obj<'a, T: BufRead>(reader: &'a mut T,
             }
       }
 
-      let mut i: usize = 0;
+//      let i: usize = 0;
 //      model.vertexs.into_iter().inspect(|& v| {
 //        let (a,b,c) = v; //println!("vertex {}: {} {} {}", i, a, b, c); i = i + 1;
 //      }).count();
@@ -182,9 +174,9 @@ fn parse_img(img: &imagefmt::Image<u8> ) -> Image
 fn main() {
     println!("Starting");
 
-    let pathBuf: std::path::PathBuf = std::env::current_dir().unwrap();
+    let path_buf: std::path::PathBuf = std::env::current_dir().unwrap();
 
-    println!("{}", pathBuf.to_str().unwrap());
+    println!("{}", path_buf.to_str().unwrap());
 
     let mut app = Application::new();
     
@@ -192,7 +184,7 @@ fn main() {
     let diffuse_map =
         imagefmt::read(Path::new("data/african_head_diffuse.tga"),
         ColFmt::RGB).unwrap();
-    let mut diffuse_map_img: Image = parse_img(&diffuse_map);
+    let diffuse_map_img: Image = parse_img(&diffuse_map);
 
     println!("Open file");
     let f = File::open(
@@ -234,21 +226,16 @@ fn main() {
 
     println!("xmin={} xmax={} ymin={} ymax={}", xmin, xmax, ymin, ymax);
 
-
     let w: u32 = 800;
     let h: u32 = 800;
 
     let mut image = Image::new(w , h, ColorE::Black);
 
-
-
-
     //image.draw_line( (0, 6), (w as i32, 10), ColorE::Green);
-    let mut counter = 0;
 
     let mut scn = scene::Scene::new(w, h);
     {
-        let mut zbuffer = scn.get_zbuffer();
+        let zbuffer = scn.get_zbuffer();
 //        {
 //            let triangle = Triangle3::from(
 //                                            (288.91104, 668.4588, 668.4588),
@@ -313,15 +300,12 @@ fn main() {
     }
 
         //delta = -delta;
-        
+
         //let triangle = Triangle3::from((600 - delta, 400 - delta, 0), (600 - delta, 200 - delta, 0), (200 - delta, 750 - delta, 0));
         //image.draw_triangle(triangle, ColorE::Red, ColorE::Red, &mut zbuffer.borrow_mut());
     }
-    let mut blue = 0;
 
     let mut renderer = Render::new(image);
-
-
 
     if true {
         let mut counter = 0;

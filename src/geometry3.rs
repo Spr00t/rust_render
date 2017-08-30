@@ -1,7 +1,7 @@
 use geometry::*;
 use std::ops::*;
 use std::mem::swap;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter};
 use std::fmt;
 use std::cmp::Ordering::*;
 pub trait Sqr<T> {
@@ -30,6 +30,7 @@ impl<T> Display for Vec3<T>
 impl<T> Vec3<T>
     where T: Copy + Clone + Mul<Output=T> + Add<Output=T> + Div<Output=T> + Sqr<T>
 {
+    #[allow(dead_code)]
     pub fn from<T1, T2, T3>(_dx: T1, _dy: T2, _dz: T3) -> Vec3<T>
         where T1: Convert<T>, T2: Convert<T>, T3: Convert<T>
     {

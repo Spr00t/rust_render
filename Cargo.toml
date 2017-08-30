@@ -11,6 +11,11 @@ rand = "*"
 imagefmt = "*"
 env_logger = "0.3"
 
+
+[lib]
+name = "matrix"
+path = "src/matrix.rs"
+
 [build-dependencies]
 gcc = "0.3"
 pkg-config = "^0.3.8"

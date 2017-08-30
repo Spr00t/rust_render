@@ -2,14 +2,12 @@ extern crate libc;
 use std::os::raw::*;
 use std::ffi::CString;
 use std;
-use libc::strcpy;
 use libc::strdup;
 use std::ptr;
 use std::env;
 use std::vec::*;
 use std::mem;
-use std::convert::*;
-use std::slice::Iter;
+
 use image::Image;
 
 #[link(name = "helper")]
@@ -44,11 +42,11 @@ impl Application {
 
         let app: * mut c_void;
         unsafe {
-            let mut ptr_args: * const * const i8 = c_args.as_ptr();
+            let ptr_args: * const * const i8 = c_args.as_ptr();
 
 
             for i in 0..(env::args().count() + 1) {
-                let mut ptr: * const i8 = *ptr_args.offset(i as isize);
+                let ptr: * const i8 = *ptr_args.offset(i as isize);
                 libc::printf("argument %d=<%s>\n".as_ptr() as * const i8, i, ptr);
             }
             app = application(env::args().count() as i32, c_args.as_ptr());

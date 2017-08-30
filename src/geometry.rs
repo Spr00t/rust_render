@@ -1,13 +1,8 @@
-use std;
 use std::mem::swap;
-use std::collections::HashMap;
 use std::cmp::Ordering::*;
 use std::cmp::*;
 use std::f32;
 use std::fmt::*;
-use std::convert::*;
-use std::hash::*;
-use std::ops::*;
 
 #[macro_export]
 macro_rules! get {
@@ -24,6 +19,8 @@ pub fn mx<T>(a: T, b: T) -> T
     }
     b
 }
+
+#[allow(dead_code)]
 pub fn mn<T>(a: T, b: T) -> T
     where T: Copy + Clone + PartialOrd
 {
@@ -35,7 +32,6 @@ pub fn mn<T>(a: T, b: T) -> T
     b
 }
 
-
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
 pub struct Point<T>
     where T: Copy + Clone
@@ -43,7 +39,6 @@ pub struct Point<T>
     pub x: T,
     pub y: T
 }
-
 
 impl<T> Display for Point<T>
     where T: Display + Copy + Clone
@@ -112,6 +107,8 @@ impl<T> Triangle<T>
     {
         Triangle{a: a_.convert(), b: b_.convert(), c: c_.convert() }
     }
+
+    #[allow(dead_code)]
     pub fn normalize_by_y(&mut self) {
         if self.a.y.partial_cmp(&self.b.y) == Some(Greater) {
             swap(&mut self.a, &mut self.b);

@@ -3,18 +3,11 @@ extern crate rand;
 use geometry::*;
 use geometry3::*;
 use image::*;
-use bridge::Application;
 use scene::*;
 use array2d::*;
-use rand::*;
 
-use std::fs::File;
-use std:: env;
 use std::f32;
-use std::cmp::*;
-use std::io::{BufReader};
-use std::io::prelude::*;
-use std::rc;
+//use std::cmp::*;
 use std::rc::*;
 use std::cell::RefCell;
 
@@ -31,7 +24,7 @@ impl Render {
         }
     }
     pub fn draw_scene(&mut self, scn: &mut Scene) {
-        let mut zbuffer = scn.get_zbuffer();
+        let zbuffer = scn.get_zbuffer();
         let count = scn.get_objects().len();
         for i in 0..count {
             //let rc_obj = scn.get_objects()[i].clone();
@@ -48,9 +41,9 @@ impl Render {
     }
 }
 pub fn get_texture_color(intensity: f32, 
-                        coords: Triangle3<f32>, 
-                        coords_t: Option<Triangle3<f32>>,
-                        texture: Option<Rc<RefCell<Image>>>) -> f32{
+                        _coords: Triangle3<f32>, 
+                        _coords_t: Option<Triangle3<f32>>,
+                        _texture: Option<Rc<RefCell<Image>>>) -> f32{
     return intensity.abs();
 }
 pub fn draw_internal(image: &mut Image,
@@ -83,16 +76,17 @@ pub fn draw_internal(image: &mut Image,
                     println!("after normalize vec3d {}", vec_3d);
                     println!("intensity {}", intensity);
 
-                    let mut m: f32 = if vec_3d.dx.partial_cmp(&vec_3d.dy) == Some(Ordering::Less) {
-                        vec_3d.dx
-                    } else {
-                        vec_3d.dy
-                    };
-                    m =  if m.partial_cmp(&vec_3d.dz) == Some(Ordering::Less) {
-                        m
-                    } else {
-                        vec_3d.dz
-                    };
+                    // let mut m: f32 = if vec_3d.dx.partial_cmp(&vec_3d.dy) == Some(Ordering::Less) {
+                    //     vec_3d.dx
+                    // } else {
+                    //     vec_3d.dy
+                    // };
+
+                    // m =  if m.partial_cmp(&vec_3d.dz) == Some(Ordering::Less) {
+                    //     m
+                    // } else {
+                    //     vec_3d.dz
+                    // };
 
                     if intensity < 0. {
                         let triangle = Triangle3::from((v1.0, v1.1, v1.2), (v2.0, v2.1, v2.2), (v3.0, v3.1, v3.2));

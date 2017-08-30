@@ -1,14 +1,7 @@
 extern crate rand;
 
 use geometry::*;
-use geometry3::*;
-use image::*;
-use bridge::Application;
-use std::convert::*;
-use rand::*;
-
-use std::rc::Rc;
-
+#[allow(dead_code)]
 pub struct Array2d<T>
     where T: Copy + Clone
 {
@@ -36,6 +29,8 @@ impl<T> Array2d<T>
     {
         self.data.get_mut(y.convert() * self.width + x.convert())
     }
+    
+    #[allow(dead_code)]
     pub fn get<A, B>(&self, x: A, y: B) -> Option<&T>
         where A: Convert<usize>, B: Convert<usize>
     {

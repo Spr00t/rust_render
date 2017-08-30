@@ -1,17 +1,10 @@
-use std;
 use std::mem::swap;
 use std::collections::HashMap;
 use std::f32;
-use std::fmt::Display;
-use std::cmp::{max, min, Ordering};
 use geometry::*;
 use geometry3::*;
-use geometry;
+
 use array2d::*;
-use std::convert::*;
-
-
-
 
 #[allow(dead_code)]
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
@@ -52,7 +45,7 @@ impl Convert<Color> for ColorE {
         for x in color_array.iter() {
             colors.insert(x.0, (x.1, x.2, x.3));
         }
-        let mut c: Color;
+        
         if let Some(c) = colors.get(&self) {
             return Color::from_rgb(c.0, c.1, c.2);
         };
@@ -146,7 +139,6 @@ impl Image {
         for x in x0.round() as i32 ..(x1+1.0).round() as i32 {
             let t = (x as f32-x0) as f32/ (x1 - x0) as f32;
             let y = y0 as f32* (1.- t) + y1 as f32 * t;
-            let w = self.w;
             z = z + delta_z;
             println!("t={} x={} y={} x0={} y0={} x1={} y1={} steep={} ",
                 t, x, y, x0, y0, x1, y1, steep);
@@ -182,50 +174,6 @@ impl Image {
 
     }
 
-    fn fill_down<T>(&mut self, t: T, color_: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
-        where T: geometry::Convert<Triangle3<f32>>
-    {
-        let mut tr = t.convert();
-
-        if tr.a.x > tr.b.x {
-            swap(&mut tr.a, &mut tr.b);
-        }
-        let (a, b, c): (Point3<f32>, Point3<f32>, Point3<f32>) = (tr.a, tr.b, tr.c);
-
-        //println!("fill_down: a={} b={}, c={}", a, b, c);
-
-        let x = a.x;
-        let delta_left  = (c.x - a.x) / (c.y - a.y);
-        let delta_right = (b.x - c.x) as f32 / (c.y - a.y) as f32;
-
-        let delta_z_left  = (c.z - a.z) / (c.y - a.y);
-        let delta_z_right = (b.z - c.z) / (c.y - a.y);
-
-        //println!("fill_down: delta_left={} delta_right={}", delta_left, delta_right);
-        let mut x_left = a.x as f32;
-        let mut x_right = b.x as f32;
-
-        let mut z_left = a.z;
-        let mut z_right = b.z;
-
-        let delta_z = (z_right - z_left) as f32 / (b.y - a.y) as f32;
-        let mut z;
-        for y in a.y.round() as i32..c.y.round() as i32
-        {
-            //println!("fill_down: y={} x_left={}, x_right={}", y, x_left, x_right);
-            z = z_left;
-            for x in x_left as i32..x_right as i32+1 {
-                //println!("fill_down: x={} y={} x_left={}, x_right={}", x, y, x_left, x_right);
-                z = z + delta_z;
-                self.draw_pixel(x as f32, y as f32, z, fill_color_, zbuffer);
-            }
-            z_left = z_left + delta_z_left;
-            x_left  = x_left + delta_left;
-            x_right = x_right - delta_right;
-        }
-    }
-
-
     fn fill_bottom(&mut self,
         xtop: f32,
         ytop: f32,
@@ -236,7 +184,7 @@ impl Image {
         ybottom: f32,
         mut zleftbottom: f32,
         mut zrightbottom: f32,
-        color_: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
+        _color: Color, fill_color_: Color, zbuffer: &mut Array2d<f32>)
     {
         let direction = if ytop < ybottom { 1 } else {-1};
 
@@ -254,9 +202,6 @@ impl Image {
             zleftbottom,
             zrightbottom,
             );
-
-        let zleft_current = ztop;
-        let zright_current = ztop;
 
         let diff_y = -ybottom.round()  + ytop.round();
 
@@ -313,7 +258,7 @@ impl Image {
                                     color_: C1,
                                     fill_color_: C2,
                                     zbuffer: &mut Array2d<f32>,
-                                    texture: Option<&Image>)
+                                    _texture: Option<&Image>)
         where T: Convert<Triangle3<f32>>, C1: Convert<Color>, C2: Convert<Color>
     {
         let mut triangle : Triangle3<f32> = t.convert();
@@ -331,7 +276,7 @@ impl Image {
                  triangle.c.x, triangle.c.y, triangle.c.z);
 
         let mut has_middle = false;
-        let mut k = 0.;
+        let k;
         let mut middle = triangle.b; // after normalization b is in the middle
         let (a, b, c) = (triangle.a, triangle.b, triangle.c);
 
@@ -346,14 +291,12 @@ impl Image {
         }
 
         if has_middle {
-            let tr : Triangle3<f32> = Triangle3::from(a, b, middle);
             self.fill_bottom(a.x, a.y, a.z,
                          b.x, middle.x,
                          b.y,
                          b.z, middle.z,
                 color, fill, zbuffer);
 
-            let tr : Triangle3<f32> = Triangle3::from(b, middle, c);
             self.fill_bottom(c.x, c.y, c.z,
                 middle.x, b.x,
                 b.y,
